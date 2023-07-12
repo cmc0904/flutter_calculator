@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +33,7 @@ class _CalculatorState extends State<Calculator> {
     "C", '(', ')', '/',
     "7", "8", "9", "*",
     "4", "5", "6", "+",
-    "1", "2", "3", "-"
+    "1", "2", "3", "-",
     'AC', "0", ".", "="
   ];
 
@@ -66,18 +67,86 @@ class _CalculatorState extends State<Calculator> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Container(
-          child: Text(statement)
+          padding: EdgeInsets.all(20),
+          alignment: Alignment.centerRight,
+          child: Text(statement, style: TextStyle(fontSize: 32),),
         ),
         Container(
-          child: Text(result),
+          padding: EdgeInsets.all(15),
+          alignment: Alignment.centerRight,
+          child: Text(result, style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),),
         )
       ],
     );
   }
 
-    Widget _buttons() {
-    return Container(
-
+  Widget _buttons() {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
+      itemBuilder: (context, index) {
+        return _myButton(buttons[index]); 
+      },
+      itemCount: buttons.length,
     );
+  }
+
+  Widget _myButton(String text) {
+    return Container(
+      margin: EdgeInsets.all(2),
+      child: MaterialButton(
+        onPressed: () {
+          setState(() {
+            clickBtn(text);
+          });
+        },
+        color: _getColor(text),
+        textColor: Colors.white,
+        child: Text(text, style: TextStyle(fontSize: 24, ),),
+        // shape: CircleBorder(),
+      ),
+    );
+  }
+
+  _getColor(String text) {
+    if(text == '/' || text == "*" || text == "-" || text == "+" || text == "-" || text == "=") {
+      return Colors.orangeAccent;
+    } else if(text == "(" || text == ")" || text == ".") {
+      return Colors.blueGrey;
+    } else if (text == "C" || text == "AC") {
+      return Colors.red;
+    }
+    return Colors.blueAccent;
+  }
+
+  clickBtn(String text) {
+    if(text == "AC") {
+      statement = "";
+      result = '0';
+      return;
+    }
+
+    if(text == "C") {
+      statement = statement.substring(0, statement.length - 1);
+      return;
+    }
+
+    if(text == "=") {
+      result = calculate();
+      return;
+    }
+    statement = statement +  text;
+  }
+  
+  calculate() {
+    try {
+      var exp = Parser().parse(statement);
+      var result = exp.evaluate(EvaluationType.REAL, ContextModel());
+      statement = result.toString();
+      return result.toString();
+    } catch(e) {
+      statement = "";
+      result = "0";
+      return "error";
+    }
   }
 }
